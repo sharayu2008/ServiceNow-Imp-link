@@ -1,0 +1,21 @@
+var att = new GlideRecord('sys_attachment');
+att.addQuery('content_type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+att.addQuery('table_sys_id', current.sys_id);
+att.orderByDesc('sys_created_on');
+att.query();
+if(att.next()){
+	var imp = new sn_impex.GlideExcelParser();
+	var attachment = new GlideSysAttachment();
+	var attachmentStream = attachment.getContentStream(att.sys_id.toString());
+	imp.parse(attachmentStream);
+	var headers = imp.getColumnHeaders();
+	var model = headers[0];
+	var sn = headers[1];
+	while(imp.next()) {
+	  var row = imp.getRow();
+	  current.variables.serial_number = row[sn];
+	  current.variable.model = row[model];
+          current.update();
+        }
+	action.setRedirectURL(current);
+}
